@@ -231,6 +231,6 @@ if __name__ == "__main__":
 
         if new_posts:
             print(f"🎉 Found {len(new_posts)} new posts! " "Sending email alert...")
-            # send_alert_email(new_posts)
+            send_alert_email(new_posts)
         else:
             print("No new posts since last check.")
