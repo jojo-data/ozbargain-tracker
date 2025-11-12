@@ -50,11 +50,11 @@ jobs:
       - name: Run Scraper
         env:
           # --- Environment Variables (Mandatory Configuration) ---
-          URL: ${{ inputs.url }}
-          LAST_POSTS_FILE: ${{ inputs.last_posts_file }}
-          SENDER_EMAIL: ${{ inputs.sender_email }}
-          RECIPIENT_EMAIL: ${{ inputs.recipient_email }}
-          TITLE: ${{ inputs.title }}
+          URL: ${{ inputs.url || 'https://www.ozbargain.com.au/search/node/gaming%20pc%20option%3Anoexpired%2Ctitleonly%20category%3A12#' }}
+          LAST_POSTS_FILE: ${{ inputs.last_posts_file || 'data/posts/gaming_pc.csv' }}
+          SENDER_EMAIL: ${{ inputs.sender_email || 'ozbargain-alerts@notifications.legalcents.com.au' }}
+          RECIPIENT_EMAIL: ${{ inputs.recipient_email || 'joe@legalcents.com.au' }}
+          TITLE: ${{ inputs.title || 'Gaming PC Deals' }}
           
           # --- GitHub Secret (Mandatory Secure Key) ---
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
@@ -63,5 +63,5 @@ jobs:
       - name: Commit Updated Last Posts File
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'Update ${{ inputs.last_posts_file }} after alerting on new posts run'
-          files: ${{ inputs.last_posts_file }}
+          commit_message: 'Update ${{ inputs.last_posts_file || 'data/posts/gaming_pc.csv' }} after alerting on new posts run'
+          files: ${{ inputs.last_posts_file || 'data/posts/gaming_pc.csv' }}
