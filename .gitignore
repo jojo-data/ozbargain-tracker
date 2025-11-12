@@ -1,0 +1,4 @@
+venv/
+myenv/
+ozbargain/
+.mypy_cache/

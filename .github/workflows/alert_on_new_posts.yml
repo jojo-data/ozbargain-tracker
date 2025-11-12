@@ -1,0 +1,67 @@
+name: OzBargain Scraper Alert
+
+on:
+  schedule:
+    # Runs at 37 minutes past every 6 hours (e.g., 03:37, 09:37, 15:37, 21:37)
+    - cron: '37 */6 * * *' 
+  workflow_dispatch:
+    inputs:
+        url:
+          description: 'URL to scrape. If not specified, defaults to https://www.ozbargain.com.au/search/node/gaming%20pc%20option%3Anoexpired%2Ctitleonly%20category%3A12#'
+          required: false
+          type: string
+          default: 'https://www.ozbargain.com.au/search/node/gaming%20pc%20option%3Anoexpired%2Ctitleonly%20category%3A12#'
+        last_posts_file:
+          description: 'Last posts file. If not specified, defaults to data/posts/gaming_pc.csv'
+          required: false
+          type: string
+          default: 'data/posts/gaming_pc.csv'
+        sender_email:
+          description: 'Sender email address. If not specified, defaults to ozbargain-alerts@notifications.legalcents.com.au'
+          required: false
+          type: string
+          default: 'ozbargain-alerts@notifications.legalcents.com.au'
+        recipient_email:
+          description: 'Email recipient address. If not specified, defaults to joe@legalcents.com.au'
+          required: false
+          type: string
+          default: 'joe@legalcents.com.au'
+        title:
+          description: 'Title of the alert. If not specified, defaults to Gaming PC Deals'
+          required: false
+          type: string
+          default: 'Gaming PC Deals'
+
+jobs:
+  alert-on-new-posts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' 
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Run Scraper
+        env:
+          # --- Environment Variables (Mandatory Configuration) ---
+          URL: ${{ inputs.url }}
+          LAST_POSTS_FILE: ${{ inputs.last_posts_file }}
+          SENDER_EMAIL: ${{ inputs.sender_email }}
+          RECIPIENT_EMAIL: ${{ inputs.recipient_email }}
+          TITLE: ${{ inputs.title }}
+          
+          # --- GitHub Secret (Mandatory Secure Key) ---
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: python alert_on_new_posts.py
+        
+      - name: Commit Updated Last Posts File
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'Update ${{ inputs.last_posts_file }} after alerting on new posts run'
+          files: ${{ inputs.last_posts_file }}
