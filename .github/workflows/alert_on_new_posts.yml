@@ -63,5 +63,5 @@ jobs:
       - name: Commit Updated Last Posts File
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'Update ${{ inputs.last_posts_file || 'data/posts/gaming_pc.csv' }} after alerting on new posts run'
+          commit_message: "Update ${{ inputs.last_posts_file || 'data/posts/gaming_pc.csv' }} after alerting on new posts run"
           files: ${{ inputs.last_posts_file || 'data/posts/gaming_pc.csv' }}
