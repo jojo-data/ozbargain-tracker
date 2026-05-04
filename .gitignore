@@ -1,4 +1,7 @@
 venv/
+.venv/
 myenv/
 ozbargain/
 .mypy_cache/
+.env
+.env.*

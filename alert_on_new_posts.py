@@ -54,6 +54,10 @@ resend.api_key = os.environ.get("RESEND_API_KEY")
 # --- Scraping Logic: UPDATED FUNCTION ---
 
 
+class ScrapeError(Exception):
+    """Raised when the scraper cannot fetch or parse OzBargain results."""
+
+
 def scrape_page(url, all_posts):
     """
     Fetches a single page, extracts posts, and finds the next page link.
@@ -66,8 +70,12 @@ def scrape_page(url, all_posts):
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/91.0.4472.124 Safari/537.36"
-            )
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Accept": (
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            ),
+            "Accept-Language": "en-AU,en;q=0.9",
         }
         response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
@@ -121,8 +129,7 @@ def scrape_page(url, all_posts):
         return all_posts
 
     except requests.RequestException as e:
-        print(f"Error fetching URL {url}: {e}")
-        return all_posts  # Return posts scraped so far
+        raise ScrapeError(f"Error fetching URL {url}: {e}") from e
 
 
 # Initial call function for the main script
@@ -181,7 +188,7 @@ def send_alert_email(new_posts):
 
     if not resend.api_key:
         print("Error: RESEND_API_KEY not set. Cannot send email.")
-        return
+        return False
 
     # 1. Build the HTML content for the email
     html_body = f"<h1>New Deals Found: {TITLE}</h1>"
@@ -207,8 +214,10 @@ def send_alert_email(new_posts):
     try:
         email_response = resend.Emails.send(params)
         print(f"Email sent. ID: {email_response.get('id')}")
+        return True
     except Exception as e:
         print(f"Error sending email with Resend: {e}")
+        return False
 
 
 # --- Main Execution ---
@@ -218,11 +227,15 @@ if __name__ == "__main__":
         f"--- Running Scraper: {TITLE} at " f"{time.strftime('%Y-%m-%d %H:%M:%S')} ---"
     )
 
-    # Use the new function that scrapes all pages
-    current_posts = scrape_all_pages(URL)
+    try:
+        current_posts = scrape_all_pages(URL)
+    except ScrapeError as e:
+        print(e)
+        sys.exit(1)
 
     if not current_posts:
         print("No posts found or scraping failed. Exiting.")
+        sys.exit(1)
     else:
         last_post_links = load_last_posts()
         new_posts = check_for_new_posts(current_posts, last_post_links)
@@ -231,6 +244,7 @@ if __name__ == "__main__":
 
         if new_posts:
             print(f"🎉 Found {len(new_posts)} new posts! " "Sending email alert...")
-            send_alert_email(new_posts)
+            if not send_alert_email(new_posts):
+                sys.exit(1)
         else:
             print("No new posts since last check.")
