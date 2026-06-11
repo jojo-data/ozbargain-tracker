@@ -7,10 +7,15 @@ on:
   workflow_dispatch:
     inputs:
       url:
-        description: 'Search URL to alert on new posts'
+        description: 'OzBargain RSS feed URL to poll (category/tag feed)'
         required: false
         type: string
-        default: 'https://www.ozbargain.com.au/search/node/gaming%20pc%20option%3Anoexpired%2Ctitleonly%20category%3A12#'
+        default: 'https://www.ozbargain.com.au/cat/computing/feed'
+      title_filter:
+        description: 'Space/comma-separated terms; all must appear in the deal title (case-insensitive). Empty = no filter.'
+        required: false
+        type: string
+        default: 'gaming pc'
       last_posts_file:
         description: 'Last posts file to track posts'
         required: false
@@ -52,7 +57,8 @@ jobs:
 
       - name: Run scraper
         env:
-          URL: ${{ inputs.url || 'https://www.ozbargain.com.au/search/node/gaming%20pc%20option%3Anoexpired%2Ctitleonly%20category%3A12#' }}
+          URL: ${{ inputs.url || 'https://www.ozbargain.com.au/cat/computing/feed' }}
+          TITLE_FILTER: ${{ inputs.title_filter || 'gaming pc' }}
           LAST_POSTS_FILE: ${{ inputs.last_posts_file || 'data/posts/gaming_pc.csv' }}
           SENDER_EMAIL: ${{ inputs.sender_email || 'ozbargain-alerts@notifications.legalcents.com.au' }}
           RECIPIENT_EMAIL: ${{ inputs.recipient_email || 'joe@legalcents.com.au' }}
